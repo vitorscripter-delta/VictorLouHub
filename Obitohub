@@ -1,0 +1,169 @@
+--// ObitoHub Script //--
+
+-- Link da imagem do Obito (botão de abrir)
+local obitoImage = "https://i.ibb.co/tq7wdmS/obito-desenho.jpg"
+
+-- Criar ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = game.CoreGui
+screenGui.Name = "ObitoHub"
+
+-- Botão de abrir
+local openBtn = Instance.new("ImageButton")
+openBtn.Parent = screenGui
+openBtn.Size = UDim2.new(0, 80, 0, 80)
+openBtn.Position = UDim2.new(0, 20, 0, 200)
+openBtn.Image = obitoImage
+openBtn.BackgroundTransparency = 1
+openBtn.Draggable = true
+
+-- Frame principal
+local mainFrame = Instance.new("Frame")
+mainFrame.Parent = screenGui
+mainFrame.Size = UDim2.new(0, 300, 0, 400)
+mainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
+mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+mainFrame.BorderSizePixel = 0
+mainFrame.Visible = false
+mainFrame.Draggable = true
+
+-- Efeito neon
+local uiStroke = Instance.new("UIStroke", mainFrame)
+uiStroke.Thickness = 3
+uiStroke.Color = Color3.fromRGB(255, 0, 0)
+
+-- Botão fechar
+local closeBtn = Instance.new("TextButton")
+closeBtn.Parent = mainFrame
+closeBtn.Size = UDim2.new(0, 30, 0, 30)
+closeBtn.Position = UDim2.new(1, -35, 0, 5)
+closeBtn.Text = "X"
+closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+
+-- Variáveis de funções
+local noclip = false
+local fly = false
+local ws = 16
+
+-- NoClip
+function toggleNoclip()
+    noclip = not noclip
+    game:GetService("RunService").Stepped:Connect(function()
+        if noclip then
+            for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                if v:IsA("BasePart") then
+                    v.CanCollide = false
+                end
+            end
+        end
+    end)
+end
+
+-- Infinity Jump
+function infJump()
+    local plr = game.Players.LocalPlayer
+    local UserInputService = game:GetService("UserInputService")
+    UserInputService.JumpRequest:Connect(function()
+        plr.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+    end)
+end
+
+-- WalkSpeed
+function setWalkSpeed(speed)
+    ws = speed
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = ws
+end
+
+-- Fly
+function toggleFly()
+    local plr = game.Players.LocalPlayer
+    local char = plr.Character
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    fly = not fly
+
+    if fly then
+        local bodyGyro = Instance.new("BodyGyro", char.HumanoidRootPart)
+        local bodyVelocity = Instance.new("BodyVelocity", char.HumanoidRootPart)
+        bodyGyro.P = 9e4
+        bodyGyro.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+        bodyVelocity.velocity = Vector3.new(0, 0, 0)
+        bodyVelocity.maxForce = Vector3.new(9e9, 9e9, 9e9)
+
+        game:GetService("RunService").RenderStepped:Connect(function()
+            if fly then
+                bodyGyro.cframe = workspace.CurrentCamera.CFrame
+                local direction = Vector3.new(0, 0, 0)
+                local uis = game:GetService("UserInputService")
+                if uis:IsKeyDown(Enum.KeyCode.W) then
+                    direction = direction + workspace.CurrentCamera.CFrame.LookVector
+                end
+                if uis:IsKeyDown(Enum.KeyCode.S) then
+                    direction = direction - workspace.CurrentCamera.CFrame.LookVector
+                end
+                if uis:IsKeyDown(Enum.KeyCode.A) then
+                    direction = direction - workspace.CurrentCamera.CFrame.RightVector
+                end
+                if uis:IsKeyDown(Enum.KeyCode.D) then
+                    direction = direction + workspace.CurrentCamera.CFrame.RightVector
+                end
+                bodyVelocity.velocity = direction * ws
+            end
+        end)
+    else
+        if char.HumanoidRootPart:FindFirstChildOfClass("BodyGyro") then
+            char.HumanoidRootPart:FindFirstChildOfClass("BodyGyro"):Destroy()
+        end
+        if char.HumanoidRootPart:FindFirstChildOfClass("BodyVelocity") then
+            char.HumanoidRootPart:FindFirstChildOfClass("BodyVelocity"):Destroy()
+        end
+    end
+end
+
+-- Botões na UI
+local noclipBtn = Instance.new("TextButton", mainFrame)
+noclipBtn.Size = UDim2.new(0, 260, 0, 40)
+noclipBtn.Position = UDim2.new(0, 20, 0, 50)
+noclipBtn.Text = "NoClip"
+noclipBtn.MouseButton1Click:Connect(toggleNoclip)
+
+local infJumpBtn = Instance.new("TextButton", mainFrame)
+infJumpBtn.Size = UDim2.new(0, 260, 0, 40)
+infJumpBtn.Position = UDim2.new(0, 20, 0, 100)
+infJumpBtn.Text = "Infinity Jump"
+infJumpBtn.MouseButton1Click:Connect(infJump)
+
+local flyBtn = Instance.new("TextButton", mainFrame)
+flyBtn.Size = UDim2.new(0, 260, 0, 40)
+flyBtn.Position = UDim2.new(0, 20, 0, 150)
+flyBtn.Text = "Fly"
+flyBtn.MouseButton1Click:Connect(toggleFly)
+
+local wsBtn = Instance.new("TextButton", mainFrame)
+wsBtn.Size = UDim2.new(0, 260, 0, 40)
+wsBtn.Position = UDim2.new(0, 20, 0, 200)
+wsBtn.Text = "WalkSpeed +"
+wsBtn.MouseButton1Click:Connect(function()
+    ws = ws + 5
+    setWalkSpeed(ws)
+end)
+
+local wsMinusBtn = Instance.new("TextButton", mainFrame)
+wsMinusBtn.Size = UDim2.new(0, 260, 0, 40)
+wsMinusBtn.Position = UDim2.new(0, 20, 0, 250)
+wsMinusBtn.Text = "WalkSpeed -"
+wsMinusBtn.MouseButton1Click:Connect(function()
+    ws = ws - 5
+    setWalkSpeed(ws)
+end)
+
+-- Ações abrir/fechar
+openBtn.MouseButton1Click:Connect(function()
+    mainFrame.Visible = true
+    openBtn.Visible = false
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+    mainFrame.Visible = false
+    openBtn.Visible = true
+end)
